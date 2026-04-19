@@ -17,6 +17,17 @@ browsers:
           min: "beta.19"
           max: "1"
 
+  - repo: CloverLabsAI/camoufox
+    name: CloverLabsAI
+    pattern: "{name}-{version}-{build}.zip"
+    versions:
+      - python_library:
+          min: "0.5.0"
+          max: "1"
+        browser:
+          min: "beta.19"
+          max: "1"
+
   - repo: coryking/camoufox
     name: CoryKing
     pattern: "{name}-{version}-{build}-{os}.{arch}.zip"

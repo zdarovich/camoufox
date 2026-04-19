@@ -452,6 +452,10 @@ class CamoufoxFetcher(GitHubDownloader):
         self._version_obj: Optional[Version] = None
         self._selected_version: Optional[AvailableVersion] = None
         self.pattern: re.Pattern = self.repo_config.build_pattern()
+        # Fallback pattern without OS/arch for repos that publish platform-agnostic zips
+        self.pattern_generic: re.Pattern = re.compile(
+            r'(?P<name>\w+)-(?P<version>[^-]+)-(?P<build>[^-]+)\.zip'
+        )
 
         if selected_version:
             self._selected_version = selected_version
@@ -465,9 +469,12 @@ class CamoufoxFetcher(GitHubDownloader):
         self, asset: Dict, release: Optional[Dict] = None
     ) -> Optional[Tuple[Version, str]]:
         """
-        Match a release asset against version constraints, OS, and arch
+        Match a release asset against version constraints, OS, and arch.
+        Falls back to a generic pattern without OS/arch suffix.
         """
         match = self.pattern.match(asset['name'])
+        if not match:
+            match = self.pattern_generic.match(asset['name'])
         if not match:
             return None
 
@@ -580,6 +587,8 @@ def list_available_versions(
     """
     config = repo_config or RepoConfig.get_default()
     pattern = config.build_pattern(spoof_os=spoof_os, spoof_arch=spoof_arch)
+    # Fallback pattern without OS/arch for repos that publish platform-agnostic zips
+    pattern_generic = re.compile(r'(?P<name>\w+)-(?P<version>[^-]+)-(?P<build>[^-]+)\.zip')
 
     os_name = spoof_os or OS_NAME
     arch = config.get_arch(spoof_arch)
@@ -613,6 +622,8 @@ def list_available_versions(
 
         for asset in release['assets']:
             match = pattern.match(asset['name'])
+            if not match:
+                match = pattern_generic.match(asset['name'])
             if not match:
                 continue
 
